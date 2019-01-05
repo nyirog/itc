@@ -1,7 +1,7 @@
 -module(event).
 
 %% API exports
--export([norm/1, leq/2, join/2]).
+-export([norm/1, leq/2, join/2, max/1, min/1]).
 
 -export_type([event/0]).
 -type event() :: non_neg_integer() | {non_neg_integer(), event(), event()}.
@@ -34,11 +34,6 @@ join({N, LeftN, RightN}, {M, LeftM, RightM}) ->
     K = M - N,
     norm({N, join(LeftN, lift(LeftM, K)), join(RightN, lift(RightM, K))}).
 
-
-%%====================================================================
-%% Internal functions
-%%====================================================================
-
 -spec min(event()) -> event().
 min({N, Left, Right}) -> N + erlang:min(min(Left), min(Right));
 min(N) -> N.
@@ -46,6 +41,11 @@ min(N) -> N.
 -spec max(event()) -> event().
 max({N, Left, Right}) -> N + erlang:max(max(Left), max(Right));
 max(N) -> N.
+
+
+%%====================================================================
+%% Internal functions
+%%====================================================================
 
 -spec lift(event(), non_neg_integer()) -> event().
 lift(N, M) when erlang:is_integer(N)-> N + M;

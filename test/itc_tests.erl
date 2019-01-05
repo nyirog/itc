@@ -14,3 +14,8 @@ fork_test() ->
 join_test() ->
     [I, J] = itc:fork(itc:seed()),
     ?assertEqual({1, 0}, itc:join(I, J)).
+
+event_test() ->
+    S = itc:seed(),
+    I = itc:event(S),
+    ?assertEqual({1, 1}, I).
