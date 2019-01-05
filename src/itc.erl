@@ -1,7 +1,7 @@
 -module(itc).
 
 %% API exports
--export([seed/0, norm/1]).
+-export([seed/0, norm/1, leq/2]).
 
 %%====================================================================
 %% API functions
@@ -12,10 +12,13 @@
 -spec seed() -> itc().
 seed() -> {0, 1}.
 
+-spec norm(itc()) -> itc().
+norm({Id, Event}) -> {id:norm(Id), event:norm(Event)}.
+
+-spec leq(itc(), itc()) -> boolean().
+leq({_Id1, Event1}, {_Id2, Event2}) -> event:leq(Event1, Event2).
+
 
 %%====================================================================
 %% Internal functions
 %%====================================================================
-
--spec norm(itc()) -> itc().
-norm({Id, Event}) -> {id:norm(Id), event:norm(Event)}.
