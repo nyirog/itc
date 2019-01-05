@@ -10,7 +10,7 @@
 -type itc() :: {id:id(), event:event()}.
 
 -spec seed() -> itc().
-seed() -> {0, 1}.
+seed() -> {1, 0}.
 
 -spec norm(itc()) -> itc().
 norm({Id, Event}) -> {id:norm(Id), event:norm(Event)}.
