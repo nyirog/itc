@@ -19,3 +19,13 @@ event_test() ->
     S = itc:seed(),
     I = itc:event(S),
     ?assertEqual({1, 1}, I).
+
+causality_test() ->
+    S = itc:seed(),
+    [F, G] = itc:fork(S),
+    E = itc:event(F),
+    J = itc:join(E, G),
+    ?assertEqual({1, {0, 1, 0}}, J),
+
+    ?assertEqual(true, itc:leq(F, E)),
+    ?assertEqual(false, itc:leq(E, F)).
