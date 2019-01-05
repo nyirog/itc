@@ -1,9 +1,14 @@
 -module(event).
 
+%% API exports
 -export([norm/1, leq/2]).
 
 -export_type([event/0]).
 -type event() :: non_neg_integer() | {non_neg_integer(), event(), event()}.
+
+%%====================================================================
+%% API functions
+%%====================================================================
 
 -spec norm(event()) -> event().
 norm(N) when erlang:is_integer(N) -> N;
@@ -19,6 +24,10 @@ leq({N, Left, Right}, M) when erlang:is_integer(M) ->
     N =< M andalso leq(lift(Left, N), M) andalso leq(lift(Right, N), M);
 leq({N, LeftN, RightN}, {M, LeftM, RightM}) ->
     N =< M andalso leq(lift(LeftN, N), lift(LeftM, M)) andalso leq(lift(RightN, N), lift(RightM, M)).
+
+%%====================================================================
+%% Internal functions
+%%====================================================================
 
 -spec min(event()) -> event().
 min({N, Left, Right}) -> N + erlang:min(min(Left), min(Right));
