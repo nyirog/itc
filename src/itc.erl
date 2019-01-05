@@ -1,7 +1,7 @@
 -module(itc).
 
 %% API exports
--export([seed/0, norm/1, leq/2, fork/1]).
+-export([seed/0, norm/1, leq/2, fork/1, join/2]).
 
 %%====================================================================
 %% API functions
@@ -22,6 +22,9 @@ leq({_Id1, Event1}, {_Id2, Event2}) -> event:leq(Event1, Event2).
 fork({Id, Event}) ->
     [Id1, Id2] = id:split(Id),
     [{Id1, Event}, {Id2, Event}].
+
+-spec join(itc(), itc()) -> itc().
+join({Id1, Event1}, {Id2, Event2}) -> {id:sum(Id1, Id2), event:join(Event1, Event2)}.
 
 %%====================================================================
 %% Internal functions

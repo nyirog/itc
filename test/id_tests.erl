@@ -10,3 +10,6 @@ split_test() ->
     ?assertEqual([{1, 0}, {0, 1}], id:split(1)),
     ?assertEqual([{0, {1, 0}}, {0, {0, 1}}], id:split({0, 1})),
     ?assertEqual([{{1, 0}, 0}, {{0, 1}, 0}], id:split({1, 0})).
+
+sum_test() ->
+    ?assertEqual(1, id:sum({0, 1}, {1, 0})).
