@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/nyirog/itc.svg?branch=master)](https://travis-ci.com/nyirog/itc)
+
 Interval tree clock
 ===================
 
