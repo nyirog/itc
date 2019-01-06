@@ -25,4 +25,7 @@ split({Id1, Id2}) -> [{Id1, 0}, {0, Id2}].
 -spec sum(id(), id()) -> id().
 sum(0, I) -> I;
 sum(I, 0) -> I;
+sum(1, 1) -> 1;
+sum(1, {LeftJ, RightJ}) -> norm({sum(1, LeftJ), sum(1, RightJ)});
+sum({LeftI, RightI}, 1) -> norm({sum(LeftI, 1), sum(RightI, 1)});
 sum({LeftI, RightI}, {LeftJ, RightJ}) -> norm({sum(LeftI, LeftJ), sum(RightI, RightJ)}).

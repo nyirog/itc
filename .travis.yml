@@ -3,4 +3,5 @@ otp_release:
   - 21.1
 script:
   - rebar3 eunit
+  - rebar3 proper
   - rebar3 dialyzer
