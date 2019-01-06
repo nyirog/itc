@@ -1,0 +1,4 @@
+@title Interval tree clock
+@author Nyiro, Gergo <gergo.nyiro@gmail.com>
+@version 0.1.0
+@reference Interval Tree Clocks: A Logical Clock for Dynamic Systems http://gsd.di.uminho.pt/members/cbm/ps/itc2008.pdf

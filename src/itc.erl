@@ -9,23 +9,40 @@
 
 -type itc() :: {id(), event()}.
 
+% @doc Initial ITC.
+% @since 0.1.0
 -spec seed() -> itc().
 seed() -> {1, 0}.
 
+% @private
 -spec norm(itc()) -> itc().
 norm({Id, Event}) -> {norm_id(Id), norm_event(Event)}.
 
+% @doc Less or equal.
+% @since 0.1.0
 -spec leq(itc(), itc()) -> boolean().
 leq({_Id1, Event1}, {_Id2, Event2}) -> leq_event(Event1, Event2).
 
+% @doc The fork operation allows the cloning of the causal past of a stamp,
+% resulting in a pair of stamps that have identical copies of the event
+% component and distinct ids; fork({i, e}) = [{i1 , e}, {i2 , e}] such that
+% i2 /= i1. Typically, i = i1 and i2 is a new id.
+% @since 0.1.0
 -spec fork(itc()) -> [itc()].
 fork({Id, Event}) ->
     [Id1, Id2] = split(Id),
     [{Id1, Event}, {Id2, Event}].
 
+% @doc This operation merges two stamps, producing a new one.
+% If join({i1, e1}, {i2, e2}) = {i3, e3}, the resulting event
+% component e3 should be such that leq(e1, e3) and leq(e2, e3).
+% @since 0.1.0
 -spec join(itc(), itc()) -> itc().
 join({Id1, Event1}, {Id2, Event2}) -> {sum(Id1, Id2), join_event(Event1, Event2)}.
 
+% @doc An event operation adds a new event to the event component, so that if
+% {i, e'} results from event({i, e}) the causal ordering is such that e less than e'.
+% @since 0.1.0
 -spec event(itc()) -> itc().
 event({Id, Event}) ->
     Filled = fill(Id, Event),
