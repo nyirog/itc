@@ -46,7 +46,14 @@ next_state(S, _Result, {call, itc, join, [Left, Right]}) ->
     S#state{itc = itc:join(Left, Right)}.
 
 postcondition(S, {call, itc, event, _}, Result) ->
-    itc:leq(S#state.itc, Result) andalso (not itc:leq(Result, S#state.itc));
+    itc:leq(S#state.itc, Result)
+    andalso (not itc:leq(Result, S#state.itc))
+    andalso itc:norm(Result)  =:= Result;
 postcondition(S, {call, itc, fork, _}, [Left, Right]) ->
-    itc:leq(S#state.itc, Left) andalso itc:leq(S#state.itc, Right);
-postcondition(S, {call, itc, join, _}, Result) -> itc:leq(S#state.itc, Result).
+    itc:leq(S#state.itc, Left)
+    andalso itc:leq(S#state.itc, Right)
+    andalso itc:norm(Left) =:= Left
+    andalso itc:norm(Right) =:= Right;
+postcondition(S, {call, itc, join, _}, Result) ->
+    itc:leq(S#state.itc, Result)
+    andalso itc:norm(Result) =:= Result.
