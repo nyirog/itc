@@ -1,5 +1,5 @@
 {application, itc,
- [{description, "An OTP library"},
+ [{description, "Interval tree clock library"},
   {vsn, "0.1.0"},
   {registered, []},
   {applications,
@@ -9,7 +9,6 @@
   {env,[]},
   {modules, []},
 
-  {maintainers, []},
   {licenses, ["Apache 2.0"]},
-  {links, []}
+  {links, [{"GitHub", "https://github.com/nyirog/itc"}]}
  ]}.
