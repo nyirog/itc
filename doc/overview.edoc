@@ -1,4 +1,58 @@
 @title Interval tree clock
 @author Nyiro, Gergo <gergo.nyiro@gmail.com>
 @version 0.1.0
-@reference Interval Tree Clocks: A Logical Clock for Dynamic Systems http://gsd.di.uminho.pt/members/cbm/ps/itc2008.pdf
+@reference <a href="http://gsd.di.uminho.pt/members/cbm/ps/itc2008.pdf">Interval Tree Clocks: A Logical Clock for Dynamic Systems</a>
+@doc
+==Summary==
+Interval tree clock (itc) is a good candidate for a logical clock in a
+distributed system where the members join and leave the cluster very
+often.
+
+Itc offers the following actions:
+<ul>
+  <li><b>seed</b>: initialize a clock</li>
+  <li><b>event</b>: increment the clock</li>
+  <li><b>fork</b>: create clock for the new cluster member</li>
+  <li><b>join</b>: synchronize the clocks</li>
+  <li><b>leq</b>: compare two clocks</li>
+</ul>
+==Simple Scenario==
+Initialize a clock:
+```
+1> ClockA0 = itc:seed().
+{1,0}
+'''
+Create clock for a new cluster member:
+```
+2> [ClockA1, ClockB1] = itc:fork(ClockA0).
+[{{1,0},0},{{0,1},0}]
+'''
+The order of the clocks (ClockA0, ClockA1, ClockB1) cannot be determied.
+```
+3> itc:leq(ClockA0, ClockA1).
+true
+4> itc:leq(ClockA1, ClockA0).
+true
+'''
+An event has to be executed to increment the clocks.
+```
+5> ClockA2 = itc:event(ClockA1).
+{{1,0},{0,1,0}}
+6> ClockB2 = itc:event(ClockB1).
+{{0,1},{0,0,1}}
+'''
+So the clocks can be ordered:
+```
+7> itc:leq(ClockA0, ClockA2).
+true
+8> itc:leq(ClockA2, ClockA0).
+false
+'''
+If the cluster nodes are synchronized then the clocks can be joined
+```
+9> ClockC3 = itc:join(ClockA2, ClockB2).
+{1,1}
+10> itc:leq(ClockA2, ClockC3).
+true
+'''
+and the new clock can be used in the syncronized nodes.
