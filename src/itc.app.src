@@ -10,6 +10,5 @@
   {modules, []},
 
   {licenses, ["Apache 2.0"]},
-  {links, [{"GitHub", "https://github.com/nyirog/itc"},
-           {"Documentation", "https://nyirog.github.io/itc/"}]}
+  {links, [{"GitHub", "https://github.com/nyirog/itc"}]}
  ]}.
