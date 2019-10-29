@@ -2,6 +2,7 @@
 
 %% API exports
 -export([seed/0, norm/1, leq/2, fork/1, join/2, event/1]).
+-export_type([itc/0]).
 
 %%====================================================================
 %% API functions
