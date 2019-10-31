@@ -4,7 +4,7 @@ Interval tree clock
 ===================
 
 This is a naive implementation of interval tree clock [1] in erlang.
-API documentation hosted on github [2].
+API documentation hosted on hexdocs [2].
 
 Build
 -----
@@ -20,4 +20,4 @@ Test
 
 
  [1]: http://gsd.di.uminho.pt/members/cbm/ps/itc2008.pdf
- [2]: https://nyirog.github.io/itc/
+ [2]: https://hexdocs.pm/itc/
