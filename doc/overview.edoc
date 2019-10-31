@@ -57,24 +57,24 @@ true
 '''
 and the new clock can be used in the syncronized nodes.
 ==Event store==
-The itc can be the time stamp of a distributed event store. The store module is
-an example for such a usage.
-The event store can be initialized with the `store:init/0' function:
+The itc can be the time stamp of a distributed event store. The `events' module
+is an example for such a usage.
+The event store can be initialized with the `events:init/0' function:
 ```
-1> EventsA0 = store:init().
+1> EventsA0 = events:init().
 [{{1,0},init}]
 '''
-New action can be added to the store with `store:append/2' function. (The action
+New action can be added to the store with `events:append/2' function. (The action
 can be any term in our example.)
 ```
-2> EventsA1 = store:append(EventsA0, {action, 1}).
+2> EventsA1 = events:append(EventsA0, {action, 1}).
 [{{1,1},{action,1}},{{1,0},init}]
-3> EventsA2 = store:append(EventsA0, {action, 2}).
+3> EventsA2 = events:append(EventsA0, {action, 2}).
 [{{1,2},{action,2}},{{1,1},{action,1}},{{1,0},init}]
 '''
-A new event store can be forked with the `store:fork/1' function:
+A new event store can be forked with the `events:fork/1' function:
 ```
-4> [EventsA3, EventsB3] = store:fork(EventsA2).
+4> [EventsA3, EventsB3] = events:fork(EventsA2).
 [[{{{1,0},2},fork},
   {{1,2},{action,2}},
   {{1,1},{action,1}},
@@ -86,41 +86,41 @@ A new event store can be forked with the `store:fork/1' function:
 
 '''
 The event store may got separated events, but the last common time stamp can
-be found with the `store:get_last_seen_event_tic/2'. (Where the second
+be found with the `events:get_last_seen_event_tic/2'. (Where the second
 parameter is the last time stamp of the compared event store.)
 ```
-5> EventsA4 = store:append(EventsA3, {action, 4}).
+5> EventsA4 = events:append(EventsA3, {action, 4}).
 [{{{1,0},{2,1,0}},{action,4}},
  {{{1,0},2},fork},
  {{1,2},{action,2}},
  {{1,1},{action,1}},
  {{1,0},init}]
-6> EventsA5 = store:append(EventsA4, {action, 5}).
+6> EventsA5 = events:append(EventsA4, {action, 5}).
 [{{{1,0},{2,2,0}},{action,5}},
  {{{1,0},{2,1,0}},{action,4}},
  {{{1,0},2},fork},
  {{1,2},{action,2}},
  {{1,1},{action,1}},
  {{1,0},init}]
-7> EventsB4 = store:append(EventsB3, {action, 14}).
+7> EventsB4 = events:append(EventsB3, {action, 14}).
 [{{{0,1},{2,0,1}},{action,14}},
  {{{0,1},2},fork},
  {{1,2},{action,2}},
  {{1,1},{action,1}},
  {{1,0},init}]
-8> LastTic = store:get_last_tic(EventsA5).
+8> LastTic = events:get_last_tic(EventsA5).
 {{1,0},{2,2,0
-9> SyncFrom = store:get_last_seen_event_tic(EventsB3, LastTic).
+9> SyncFrom = events:get_last_seen_event_tic(EventsB3, LastTic).
 {{0,1},2}
 '''
-The unseen events can be selected with the `store:list_unseen_events/2' function,
+The unseen events can be selected with the `events:list_unseen_events/2' function,
 where the second parameter is the last common time stamp from the
-`store:get_last_seen_event_tic' function. And the unseen events can be merged
-into the event store with the `store:merge/2' function.
+`events:get_last_seen_event_tic' function. And the unseen events can be merged
+into the event store with the `events:merge/2' function.
 ```
-10> UnseenEventsA = store:list_unseen_events(EventsA5, SyncFrom).
+10> UnseenEventsA = events:list_unseen_events(EventsA5, SyncFrom).
 [{{{1,0},{2,2,0}},{action,5}},{{{1,0},{2,1,0}},{action,4}}]
-11> store:merge(EventsB3, UnseenEventsA).
+11> events:merge(EventsB3, UnseenEventsA).
 [{{1,4},merge},
  {{{1,0},{2,2,0}},{action,5}},
  {{{1,0},{2,1,0}},{action,4}},

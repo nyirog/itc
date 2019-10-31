@@ -1,4 +1,4 @@
--module(store).
+-module(events).
 
 -export([init/0, append/2, fork/1, merge/2]).
 -export([get_last_seen_event_tic/2, list_unseen_events/2, get_last_tic/1]).
