@@ -19,40 +19,115 @@ Itc offers the following actions:
 ==Simple Scenario==
 Initialize a clock:
 ```
-1> ClockA0 = itc:seed().
+1> Tic0 = itc:seed().
 {1,0}
 '''
 Create clock for a new cluster member:
 ```
-2> [ClockA1, ClockB1] = itc:fork(ClockA0).
+2> [Tic1, Toc1] = itc:fork(Tic0).
 [{{1,0},0},{{0,1},0}]
 '''
-The order of the clocks (ClockA0, ClockA1, ClockB1) cannot be determied.
+The forked clock cannot be compared to the original clock:
 ```
-3> itc:leq(ClockA0, ClockA1).
+3> itc:leq(TicA0, TicA1).
 true
-4> itc:leq(ClockA1, ClockA0).
+4> itc:leq(TicA1, TicA0).
 true
 '''
-An event has to be executed to increment the clocks.
+Only the tic of the next event can be compared to the original clock:
 ```
-5> ClockA2 = itc:event(ClockA1).
+5> Tic2 = itc:event(Tic1).
 {{1,0},{0,1,0}}
-6> ClockB2 = itc:event(ClockB1).
+6> Toc2 = itc:event(Toc1).
 {{0,1},{0,0,1}}
 '''
 So the clocks can be ordered:
 ```
-7> itc:leq(ClockA0, ClockA2).
+7> itc:leq(Tic0, Tic2).
 true
-8> itc:leq(ClockA2, ClockA0).
+8> itc:leq(Tic2, Tic0).
 false
 '''
 If the cluster nodes are synchronized then the clocks can be joined
 ```
-9> ClockC3 = itc:join(ClockA2, ClockB2).
+9> TicC3 = itc:join(TicA2, TicB2).
 {1,1}
-10> itc:leq(ClockA2, ClockC3).
+10> itc:leq(TicA2, TicC3).
 true
 '''
 and the new clock can be used in the syncronized nodes.
+==Event store==
+The itc can be the time stamp of a distributed event store. The store module is
+an example for such a usage.
+The event store can be initialized with the `store:init/0' function:
+```
+1> EventsA0 = store:init().
+[{{1,0},init}]
+'''
+New action can be added to the store with `store:append/2' function. (The action
+can be any term in our example.)
+```
+2> EventsA1 = store:append(EventsA0, {action, 1}).
+[{{1,1},{action,1}},{{1,0},init}]
+3> EventsA2 = store:append(EventsA0, {action, 2}).
+[{{1,2},{action,2}},{{1,1},{action,1}},{{1,0},init}]
+'''
+A new event store can be forked with the `store:fork/1' function:
+```
+4> [EventsA3, EventsB3] = store:fork(EventsA2).
+[[{{{1,0},2},fork},
+  {{1,2},{action,2}},
+  {{1,1},{action,1}},
+  {{1,0},init}],
+ [{{{0,1},2},fork},
+  {{1,2},{action,2}},
+  {{1,1},{action,1}},
+  {{1,0},init}]]
+
+'''
+The event store may got separated events, but the last common time stamp can
+be found with the `store:get_last_seen_event_tic/2'. (Where the second
+parameter is the last time stamp of the compared event store.)
+```
+5> EventsA4 = store:append(EventsA3, {action, 4}).
+[{{{1,0},{2,1,0}},{action,4}},
+ {{{1,0},2},fork},
+ {{1,2},{action,2}},
+ {{1,1},{action,1}},
+ {{1,0},init}]
+6> EventsA5 = store:append(EventsA4, {action, 5}).
+[{{{1,0},{2,2,0}},{action,5}},
+ {{{1,0},{2,1,0}},{action,4}},
+ {{{1,0},2},fork},
+ {{1,2},{action,2}},
+ {{1,1},{action,1}},
+ {{1,0},init}]
+7> EventsB4 = store:append(EventsB3, {action, 14}).
+[{{{0,1},{2,0,1}},{action,14}},
+ {{{0,1},2},fork},
+ {{1,2},{action,2}},
+ {{1,1},{action,1}},
+ {{1,0},init}]
+8> LastTic = store:get_last_tic(EventsA5).
+{{1,0},{2,2,0
+9> SyncFrom = store:get_last_seen_event_tic(EventsB3, LastTic).
+{{0,1},2}
+'''
+The unseen events can be selected with the `store:list_unseen_events/2' function,
+where the second parameter is the last common time stamp from the
+`store:get_last_seen_event_tic' function. And the unseen events can be merged
+into the event store with the `store:merge/2' function.
+```
+10> UnseenEventsA = store:list_unseen_events(EventsA5, SyncFrom).
+[{{{1,0},{2,2,0}},{action,5}},{{{1,0},{2,1,0}},{action,4}}]
+11> store:merge(EventsB3, UnseenEventsA).
+[{{1,4},merge},
+ {{{1,0},{2,2,0}},{action,5}},
+ {{{1,0},{2,1,0}},{action,4}},
+ {{{0,1},2},fork},
+ {{1,2},{action,2}},
+ {{1,1},{action,1}},
+ {{1,0},init}]
+'''
+As you can see the time stamp of the merge event is normalized, because the
+two branch of the itc is merged too.
