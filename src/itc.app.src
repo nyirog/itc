@@ -1,6 +1,6 @@
 {application,itc,
              [{description,"Interval tree clock library"},
-              {vsn,"0.1.2"},
+              {vsn,"0.2.0"},
               {registered,[]},
               {applications,[kernel,stdlib]},
               {env,[]},
