@@ -131,3 +131,39 @@ into the event store with the `events:merge/2' function.
 '''
 As you can see the time stamp of the merge event is normalized, because the
 two branch of the itc is merged too.
+==Event server==
+The synchronization protocol described above is implemented in the `event_server'
+module.
+```
+1> event_server:start_link(a).
+{ok, <0.N.0>}
+2> event_server:add(a, 1).
+ok
+3> event_server:add(a, 2).
+ok
+4> event_server:list(a).
+[2,1]
+5> event_server:start_link(b).
+{ok, <0.N.0>}
+6> event_server:join(b, a).
+ok
+7> event_server:list(b).
+[2,1]
+8> event_server:add(b, 3).
+9> event_server:list(a).
+[3,2,1]
+10> event_server:start_link(c).
+{ok, <0.N.0>}
+11> event_server:join(c, b).
+ok
+12> event_server:add(c, 4).
+ok
+13> event_server:add(a, 5).
+ok
+14> event_server:list(a).
+[5,4,3,2,1]
+15> event_server:list(b).
+[5,4,3,2,1]
+16> event_server:list(c).
+[5,4,3,2,1]
+'''

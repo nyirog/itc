@@ -1,7 +1,7 @@
 -module(events).
 
 -export([init/0, append/2, fork/1, merge/2]).
--export([get_last_seen_event_tic/2, list_unseen_events/2, get_last_tic/1]).
+-export([get_last_seen_event_tic/2, list_unseen_events/2, get_last_tic/1, filter/2]).
 
 -type action() :: any().
 -type tic() :: itc:itc().
@@ -43,3 +43,13 @@ merge(Events, UnseenEvents) ->
 
 -spec get_last_tic(events()) -> tic().
 get_last_tic([{Tic, _} | _]) -> Tic.
+
+-spec filter(events(), atom()) -> list(any()).
+filter(Events, ActionKey) ->
+    lists:reverse(filter(Events, ActionKey, [])).
+
+filter([], _ActionKey, FilteredActions) -> FilteredActions;
+filter([{_, {ActionKey, Action}} | Tail], ActionKey, FilteredActions) ->
+    filter(Tail, ActionKey, [Action|FilteredActions]);
+filter([_ | Tail], ActionKey, FilteredActions) ->
+    filter(Tail, ActionKey, FilteredActions).
