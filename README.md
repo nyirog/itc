@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/nyirog/itc.svg?branch=master)](https://travis-ci.com/nyirog/itc)
+[![Build Status](https://travis-ci.com/nyirog/itc.svg?branch=master)](https://travis-ci.com/nyirog/itc)[![Hex pm](http://img.shields.io/hexpm/v/itc.svg?style=flat)](https://hex.pm/packages/itc)
 
 Interval tree clock
 ===================
