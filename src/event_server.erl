@@ -53,12 +53,12 @@ handle_call({join, Other}, _From, State = #{node := Self, events := [_]}) ->
     JoinedEvents = events:append(Events, {join, Other}),
     {reply, ok, State#{events := JoinedEvents}};
 
-handle_call(_,  _From, State) -> {stop, shutdown, State}.
+handle_call(_,  _From, State) -> {reply, {error, unhandled}, State}.
 
 handle_cast({update, UnseenEvents}, State = #{events := Events}) ->
     {noreply, State#{events := events:merge(Events, UnseenEvents)}};
 
-handle_cast(_, State) -> {stop, shutdown, State}.
+handle_cast(_, State) -> {noreply, State}.
 
 %%------------------------------------------------------------------------------
 
