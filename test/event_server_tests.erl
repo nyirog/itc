@@ -30,3 +30,15 @@ transitive_join_test() ->
     event_server:stop(a),
     event_server:stop(b),
     event_server:stop(c).
+
+resync_within_timeout_period_test() ->
+    event_server:start_link(a),
+    event_server:fork(a, b),
+    State = #{events := Events} = sys:get_state(a),
+    DirtyState = State#{events := events:append(Events, {action, 0})},
+    gen_server:call(a, {dirty_update, DirtyState}),
+    timer:sleep(200),
+    ?assertEqual([0], event_server:list(a)),
+    ?assertEqual([0], event_server:list(b)),
+    event_server:stop(a),
+    event_server:stop(b).

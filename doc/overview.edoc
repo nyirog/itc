@@ -163,3 +163,20 @@ ok
 16> event_server:list(c).
 [5,4,3,2,1]
 '''
+The event server has a retry logic within 100 ms after a new event
+(`event_server:add/2', `event_server:fork/2'). The missing sync can be emulated
+with dirty_update which skips the sync_nodes call.
+The nodes are skipping the sync if they already registered the tic of the sync,
+so the retry wont cause event duplication.
+```
+1> event_server:start_link(a).
+2> event_server:fork(a, b).
+3> State = #{events := Events} = sys:get_state(a).
+4> DirtyState = State#{events := events:append(Events, {action, 0})}.
+5> gen_server:call(a, {dirty_update, DirtyState}).
+6> timer:sleep(200).
+7> event_server:list(a)).
+[0]
+8> event_server:list(b)).
+[0]
+'''

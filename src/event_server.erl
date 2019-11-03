@@ -1,14 +1,18 @@
 -module(event_server).
 
 -behaviour(gen_server).
--export([start_link/1, init/1, stop/1, terminate/2, handle_call/3, handle_cast/2]).
+-export([start_link/1, init/1, stop/1, terminate/2, handle_call/3,
+         handle_cast/2, handle_info/2]).
 -export([add/2, fork/2, list/1]).
+
+-define(TIMEOUT, 100).
 
 %%==============================================================================
 %% API
 %%==============================================================================
 
-start_link(Name) -> gen_server:start_link({local, Name}, ?MODULE, Name, []).
+start_link(Name) ->
+    gen_server:start_link({local, Name}, ?MODULE, Name, []).
 
 stop(PidOrName) -> gen_server:stop(PidOrName).
 
@@ -31,13 +35,13 @@ terminate(_Reason, _State) -> ok.
 handle_call({add, Action}, _From, State = #{events := Events, node := Self}) ->
     NewEvents = events:append(Events, {action, Action}),
     sync_nodes(NewEvents, Self),
-    {reply, ok, State#{events := NewEvents}};
+    {reply, ok, State#{events := NewEvents}, ?TIMEOUT};
 
 handle_call({fork, Other}, _From, State = #{events := Events, node := Self}) ->
     [LeftEvents, RightEvents] = events:fork(Events),
     JoinedEvents = events:append(LeftEvents, {join, Other}),
     sync_nodes(JoinedEvents, Self),
-    {reply, RightEvents, State#{events := JoinedEvents}};
+    {reply, RightEvents, State#{events := JoinedEvents}, ?TIMEOUT};
 
 handle_call({join, Other}, _From, State = #{node := Self, events := [_]}) ->
     Events = gen_server:call(Other, {fork, Self}),
@@ -56,15 +60,24 @@ handle_call(list, _From, State = #{events := Events}) ->
 handle_call({sync_from, SyncFrom}, _From, State = #{events := Events}) ->
     {reply, events:list_unseen_events(Events, SyncFrom), State};
 
+handle_call({dirty_update, State}, _From, _) -> {reply, ok, State, ?TIMEOUT};
+
 handle_call(M,  _From, State) -> {reply, {error, "unknown message", M}, State}.
 
 handle_cast({sync, Tic, Other}, State = #{events := Events}) ->
-    SyncFrom = events:get_last_seen_event_tic(Events, Tic),
-    UnseenEvents = gen_server:call(Other, {sync_from, SyncFrom}),
-    MergedEvents = events:merge(Events, UnseenEvents),
-    {noreply, State#{events := MergedEvents}};
+    case events:is_known_tic(Events, Tic) of
+       true-> {noreply, State};
+       false -> SyncFrom = events:get_last_seen_event_tic(Events, Tic),
+                UnseenEvents = gen_server:call(Other, {sync_from, SyncFrom}),
+                MergedEvents = events:merge(Events, UnseenEvents),
+                {noreply, State#{events := MergedEvents}}
+    end;
 
 handle_cast(_, State) -> {noreply, State}.
+
+handle_info(timeout, State = #{events := Events, node := Self}) ->
+    sync_nodes(Events, Self),
+    {noreply, State, ?TIMEOUT}.
 
 %%------------------------------------------------------------------------------
 

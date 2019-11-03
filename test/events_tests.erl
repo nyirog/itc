@@ -36,3 +36,10 @@ merge_test() ->
     UnseenEvents = events:list_unseen_events(H, SyncFrom),
     T = events:merge(S, UnseenEvents),
     ?assertEqual([10, 20, 0], events:filter(T, action)).
+
+is_known_tic_test() ->
+    E = events:init(),
+    F = events:append(E, {action, 0}),
+    Tic = events:get_last_tic(F),
+    ?assertEqual(true, events:is_known_tic(F, Tic)),
+    ?assertEqual(false, events:is_known_tic(E, Tic)).

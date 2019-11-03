@@ -1,7 +1,8 @@
 -module(events).
 
 -export([init/0, append/2, fork/1, merge/2]).
--export([get_last_seen_event_tic/2, list_unseen_events/2, get_last_tic/1, filter/2]).
+-export([get_last_seen_event_tic/2, list_unseen_events/2, get_last_tic/1,
+         filter/2, is_known_tic/2]).
 
 -type action() :: any().
 -type tic() :: itc:itc().
@@ -53,3 +54,7 @@ filter([{_, {ActionKey, Action}} | Tail], ActionKey, FilteredActions) ->
     filter(Tail, ActionKey, [Action|FilteredActions]);
 filter([_ | Tail], ActionKey, FilteredActions) ->
     filter(Tail, ActionKey, FilteredActions).
+
+-spec is_known_tic(events(), tic()) -> boolean().
+is_known_tic(Events, Tic) ->
+    lists:any(fun ({Toc, _}) -> Tic =:= Toc end, Events).
