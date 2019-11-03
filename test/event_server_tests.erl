@@ -10,9 +10,8 @@ list_test() ->
 
 join_test() ->
     event_server:start_link(a),
-    event_server:start_link(b),
     event_server:add(a, 0),
-    event_server:join(b, a),
+    event_server:fork(a, b),
     ?assertEqual([0], event_server:list(b)),
     event_server:add(b, 1),
     ?assertEqual([1, 0], event_server:list(a)),
@@ -21,13 +20,11 @@ join_test() ->
 
 transitive_join_test() ->
     event_server:start_link(a),
-    event_server:start_link(b),
-    event_server:start_link(c),
     event_server:add(a, 0),
-    event_server:join(b, a),
+    event_server:fork(a, b),
     ?assertEqual([0], event_server:list(b)),
     event_server:add(b, 1),
-    event_server:join(c, a),
+    event_server:fork(b, c),
     event_server:add(c, 2),
     ?assertEqual([2, 1, 0], event_server:list(a)),
     event_server:stop(a),

@@ -143,18 +143,14 @@ ok
 ok
 4> event_server:list(a).
 [2,1]
-5> event_server:start_link(b).
-{ok, <0.N.0>}
-6> event_server:join(b, a).
+6> event_server:fork(a, b).
 ok
 7> event_server:list(b).
 [2,1]
 8> event_server:add(b, 3).
 9> event_server:list(a).
 [3,2,1]
-10> event_server:start_link(c).
-{ok, <0.N.0>}
-11> event_server:join(c, b).
+11> event_server:fork(b, c).
 ok
 12> event_server:add(c, 4).
 ok

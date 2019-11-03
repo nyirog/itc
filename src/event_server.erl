@@ -2,7 +2,7 @@
 
 -behaviour(gen_server).
 -export([start_link/1, init/1, stop/1, terminate/2, handle_call/3, handle_cast/2]).
--export([add/2, join/2, list/1]).
+-export([add/2, fork/2, list/1]).
 
 %%==============================================================================
 %% API
@@ -18,8 +18,9 @@ add(Self, Action) ->
 list(Self) ->
     gen_server:call(Self, list).
 
-join(Self, Other) ->
-    gen_server:call(Self, {join, Other}).
+fork(Self, Other) ->
+    {ok, _Pid} = start_link(Other),
+    gen_server:call(Other, {join, Self}).
 
 %%------------------------------------------------------------------------------
 
@@ -38,11 +39,16 @@ handle_call({fork, Other}, _From, State = #{events := Events, node := Self}) ->
     sync_nodes(JoinedEvents, Self),
     {reply, RightEvents, State#{events := JoinedEvents}};
 
-%% join is allowed only after init
 handle_call({join, Other}, _From, State = #{node := Self, events := [_]}) ->
     Events = gen_server:call(Other, {fork, Self}),
     JoinedEvents = events:append(Events, {join, Other}),
     {reply, ok, State#{events := JoinedEvents}};
+
+handle_call({join, _}, _From, State = #{events := Events}) ->
+    Error = {
+        error, "Join is allowed only after init", events:filter(Events, action)
+    },
+    {reply, Error, State};
 
 handle_call(list, _From, State = #{events := Events}) ->
     {reply, events:filter(Events, action), State};
