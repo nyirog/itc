@@ -29,22 +29,13 @@ terminate(_Reason, _State) -> ok.
 
 handle_call({add, Action}, _From, State = #{events := Events, node := Self}) ->
     NewEvents = events:append(Events, {action, Action}),
-    Others = get_other_nodes(Events, Self),
-    lists:foreach(fun (Node) -> update_node(NewEvents, Node) end, Others),
-    {reply, ok, State#{events := events:append(Events, {action, Action})}};
-
-handle_call(list, _From, State = #{events := Events}) ->
-    {reply, events:filter(Events, action), State};
-
-handle_call({sync, Tic}, _From, State = #{events := Events}) ->
-    SyncFrom = events:get_last_seen_event_tic(Events, Tic),
-    {reply, SyncFrom, State};
+    sync_nodes(NewEvents, Self),
+    {reply, ok, State#{events := NewEvents}};
 
 handle_call({fork, Other}, _From, State = #{events := Events, node := Self}) ->
     [LeftEvents, RightEvents] = events:fork(Events),
     JoinedEvents = events:append(LeftEvents, {join, Other}),
-    Others = get_other_nodes(Events, Self),
-    lists:foreach(fun (Node) -> update_node(JoinedEvents, Node) end, Others),
+    sync_nodes(JoinedEvents, Self),
     {reply, RightEvents, State#{events := JoinedEvents}};
 
 %% join is allowed only after init
@@ -53,20 +44,31 @@ handle_call({join, Other}, _From, State = #{node := Self, events := [_]}) ->
     JoinedEvents = events:append(Events, {join, Other}),
     {reply, ok, State#{events := JoinedEvents}};
 
-handle_call(_,  _From, State) -> {reply, {error, unhandled}, State}.
+handle_call(list, _From, State = #{events := Events}) ->
+    {reply, events:filter(Events, action), State};
 
-handle_cast({update, UnseenEvents}, State = #{events := Events}) ->
-    {noreply, State#{events := events:merge(Events, UnseenEvents)}};
+handle_call({sync_from, SyncFrom}, _From, State = #{events := Events}) ->
+    {reply, events:list_unseen_events(Events, SyncFrom), State};
+
+handle_call(M,  _From, State) -> {reply, {error, "unknown message", M}, State}.
+
+handle_cast({sync, Tic, Other}, State = #{events := Events}) ->
+    SyncFrom = events:get_last_seen_event_tic(Events, Tic),
+    UnseenEvents = gen_server:call(Other, {sync_from, SyncFrom}),
+    MergedEvents = events:merge(Events, UnseenEvents),
+    {noreply, State#{events := MergedEvents}};
 
 handle_cast(_, State) -> {noreply, State}.
 
 %%------------------------------------------------------------------------------
 
-update_node(Events, Node) ->
-    LastTic = events:get_last_tic(Events),
-    SyncFrom = gen_server:call(Node, {sync, LastTic}),
-    UnseenEvents = events:list_unseen_events(Events, SyncFrom),
-    gen_server:cast(Node, {update, UnseenEvents}).
+sync_nodes(Events, Self) ->
+    lists:foreach(
+        fun (Node) ->
+            gen_server:cast(Node, {sync, events:get_last_tic(Events), Self})
+        end,
+        get_other_nodes(Events, Self)
+    ).
 
 get_other_nodes(Events, Self) ->
     Nodes = lists:usort(events:filter(Events, join)),
