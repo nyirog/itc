@@ -37,6 +37,7 @@ fork(Events) ->
 
 -spec merge(events(), list(event())) -> events().
 merge(Events, []) -> Events;
+merge(Events, [Event = {_, merge}]) -> [Event | Events];
 merge(Events, UnseenEvents) ->
     Tic = itc:event(itc:join(get_last_tic(Events), get_last_tic(UnseenEvents))),
     [{Tic, merge} | UnseenEvents] ++ Events.

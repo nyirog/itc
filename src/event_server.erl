@@ -1,5 +1,7 @@
 -module(event_server).
 
+-define(SYNC_CYCLE, 100).
+
 -behaviour(gen_server).
 -export([start_link/1, init/1, stop/1, terminate/2, handle_call/3, handle_cast/2]).
 -export([add/2, fork/2, list/1]).
@@ -19,14 +21,21 @@ list(Self) ->
     gen_server:call(Self, list).
 
 fork(Self, Other) ->
-    {ok, _Pid} = start_link(Other),
-    gen_server:call(Other, {join, Self}).
+    {ok, Pid} = start_link(Other),
+    ok = gen_server:call(Other, {join, Self}),
+    {ok, Pid}.
 
 %%------------------------------------------------------------------------------
 
-init(Node) -> {ok, #{node => Node, events => events:init()}}.
+init(Node) ->
+    {ok, Timer} = timer:apply_interval(
+        ?SYNC_CYCLE, gen_server, cast, [Node, sync_nodes]
+    ),
+    {ok, #{node => Node, events => events:init(), timer => Timer}}.
 
-terminate(_Reason, _State) -> ok.
+terminate(_Reason, #{timer := Timer}) ->
+    timer:cancel(Timer),
+    ok.
 
 handle_call({add, Action}, _From, State = #{events := Events, node := Self}) ->
     NewEvents = events:append(Events, {action, Action}),
@@ -59,10 +68,17 @@ handle_call({sync_from, SyncFrom}, _From, State = #{events := Events}) ->
 handle_call(M,  _From, State) -> {reply, {error, "unknown message", M}, State}.
 
 handle_cast({sync, Tic, Other}, State = #{events := Events}) ->
-    SyncFrom = events:get_last_seen_event_tic(Events, Tic),
-    UnseenEvents = gen_server:call(Other, {sync_from, SyncFrom}),
-    MergedEvents = events:merge(Events, UnseenEvents),
-    {noreply, State#{events := MergedEvents}};
+    case itc:leq(Tic, events:get_last_tic(Events)) of
+        true ->  {noreply, State};
+        false -> SyncFrom = events:get_last_seen_event_tic(Events, Tic),
+                 UnseenEvents = gen_server:call(Other, {sync_from, SyncFrom}),
+                 MergedEvents = events:merge(Events, UnseenEvents),
+                 {noreply, State#{events := MergedEvents}}
+    end;
+
+handle_cast(sync_nodes, State = #{events := Events, node := Self}) ->
+    sync_nodes(Events, Self),
+    {noreply, State};
 
 handle_cast(_, State) -> {noreply, State}.
 
